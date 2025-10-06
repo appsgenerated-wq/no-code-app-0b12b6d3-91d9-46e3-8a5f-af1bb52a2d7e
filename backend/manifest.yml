@@ -1,0 +1,117 @@
+name: FoodApp
+
+entities:
+  User:
+    authenticable: true
+    properties:
+      - name
+      - name: email
+        type: email
+      - name: role
+        type: choice
+        options:
+          values: [customer, owner, admin]
+        default: customer
+    policies:
+      create:
+        - access: admin
+      read:
+        - access: restricted
+          allow: User
+          condition: self
+      update:
+        - access: restricted
+          allow: User
+          condition: self
+      delete:
+        - access: admin
+      signup:
+        - access: public
+
+  Restaurant:
+    properties:
+      - name: name
+        type: string
+      - name: description
+        type: text
+      - name: cuisine
+        type: choice
+        options:
+          values: [Italian, Mexican, Japanese, Indian, American]
+      - name: photo
+        type: image
+        options:
+          sizes:
+            thumbnail:
+              width: 400
+              height: 400
+            large:
+              width: 1024
+              height: 1024
+    belongsTo:
+      - name: owner
+        entity: User
+    policies:
+      create:
+        - access: restricted
+          allow: User
+      read:
+        - access: public
+      update:
+        - access: restricted
+          allow: User
+          condition: self
+      delete:
+        - access: restricted
+          allow: User
+          condition: self
+
+  MenuItem:
+    properties:
+      - name: name
+        type: string
+      - name: description
+        type: text
+      - name: price
+        type: money
+        options:
+          currency: 'USD'
+      - name: photo
+        type: image
+        options:
+          sizes:
+            thumbnail:
+              width: 200
+              height: 200
+    belongsTo:
+      - name: restaurant
+        entity: Restaurant
+    policies:
+      create:
+        - access: restricted
+          allow: User
+      read:
+        - access: public
+      update:
+        - access: restricted
+          allow: User
+          # Note: A real app would use a custom endpoint to verify ownership of the parent restaurant.
+          # For this example, we keep it simple: any logged-in user can update.
+      delete:
+        - access: restricted
+          allow: User
+
+# Global CORS handler for all preflight OPTIONS requests
+endpoints:
+  cors:
+    path: /api/*
+    method: OPTIONS
+    policies: []
+    handler: healthCheck
+
+# Health check endpoint for connection testing
+  health:
+    path: /api/health
+    method: GET
+    policies: []
+    handler: healthCheck
